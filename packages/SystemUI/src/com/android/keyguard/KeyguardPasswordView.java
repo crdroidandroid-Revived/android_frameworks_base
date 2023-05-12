@@ -41,6 +41,7 @@ import android.widget.TextView.OnEditorActionListener;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.internal.widget.LockPatternUtils.RequestThrottledException;
 import com.android.internal.widget.TextViewInputDisabler;
+import com.android.keyguard.KeyguardSecurityModel.SecurityMode;
 import com.android.systemui.R;
 
 import java.util.List;
@@ -408,44 +409,8 @@ public class KeyguardPasswordView extends KeyguardAbsKeyInputView
         return bytes;
     }
 
-    private AsyncTask<?, ?, ?> validateQuickUnlock(final LockPatternUtils utils,
-            final String password,
-            final int userId) {
-        AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>() {
-
-            @Override
-            protected Boolean doInBackground(Void... args) {
-                try {
-                    return utils.checkPassword(password, userId);
-                } catch (RequestThrottledException ex) {
-                    return false;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Boolean result) {
-                runQuickUnlock(result);
-            }
-        };
-        task.execute();
-        return task;
-    }
-
-    private void runQuickUnlock(Boolean matched) {
-        if (matched) {
-            mCallback.reportUnlockAttempt(userId, true, 0);
-            mCallback.dismiss(true, userId);
-            resetPasswordText(true, true);
-        }
-    }
-
-    private int keyguardPinPasswordLength() {
-        int pinPasswordLength = -1;
-        try {
-            pinPasswordLength = (int) mLockPatternUtils.getLockSettings().getLong("lockscreen.pin_password_length", -1, userId);
-        } catch (Exception e) {
-            // do nothing
-        }
-        return pinPasswordLength >= 4 ? pinPasswordLength : -1;
+    @Override
+    public SecurityMode getSecurityMode() {
+        return SecurityMode.Password;
     }
 }
